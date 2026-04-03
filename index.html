@@ -1,0 +1,344 @@
+This is a complete, single-file HTML solution. I have used internal CSS and JavaScript to handle the "page" transitions, animations, and the scrolling logic for the MTF list. 
+
+To use this, simply save the code below as an `.html` file (e.g., `scpenet.html`) and open it in any web browser.
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SCPiNET | Security & Combative Database</title>
+    <style>
+        :root {
+            --bg-color: #0a0a0a;
+            --text-color: #e0e0e0;
+            --accent-red: #8b0000;
+            --border-gray: #333;
+            --highlight: #ffffff;
+        }
+
+        * {
+            box-sizing: border-box;
+            cursor: crosshair;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Courier New', Courier, monospace;
+            margin: 0;
+            overflow: hidden; /* Prevent scroll during animations */
+        }
+
+        /* --- LOADING OVERLAY --- */
+        #loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: black;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .loader-bar {
+            width: 300px;
+            height: 2px;
+            background: #222;
+            margin-top: 20px;
+            position: relative;
+        }
+
+        .loader-progress {
+            position: absolute;
+            height: 100%;
+            background: var(--accent-red);
+            width: 0%;
+            animation: load 3s forwards;
+        }
+
+        @keyframes load {
+            0% { width: 0%; }
+            20% { width: 10%; }
+            50% { width: 70%; }
+            100% { width: 100%; }
+        }
+
+        /* --- PAGES --- */
+        .page {
+            display: none;
+            height: 100vh;
+            padding: 40px;
+            overflow-y: auto;
+            border: 1px solid var(--border-gray);
+            margin: 10px;
+        }
+
+        .active {
+            display: block;
+        }
+
+        header {
+            border-bottom: 2px solid var(--accent-red);
+            padding-bottom: 10px;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            color: var(--highlight);
+            letter-spacing: 5px;
+            margin: 0;
+        }
+
+        .warning-text {
+            color: var(--accent-red);
+            font-weight: bold;
+            font-size: 0.8em;
+        }
+
+        /* --- GRID SYSTEM --- */
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .menu-item {
+            padding: 20px;
+            border: 1px solid var(--border-gray);
+            background: rgba(255, 255, 255, 0.02);
+            text-align: center;
+            transition: 0.3s;
+            color: #666; /* Non-clickable items appear dimmed */
+        }
+
+        .clickable {
+            color: var(--text-color);
+            border-color: var(--accent-red);
+        }
+
+        .clickable:hover {
+            background: var(--accent-red);
+            color: white;
+            cursor: pointer;
+        }
+
+        /* --- MTF LIST --- */
+        .mtf-list {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .mtf-entry {
+            padding: 10px;
+            border-bottom: 1px solid #222;
+            color: #444;
+        }
+
+        .mtf-active {
+            color: var(--highlight);
+            font-weight: bold;
+            border: 1px solid var(--accent-red);
+            padding: 15px;
+            margin: 10px 0;
+        }
+
+        /* --- AUTH ANIMATION --- */
+        #auth-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.95);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+
+        .terminal-box {
+            width: 400px;
+            padding: 20px;
+            border: 1px solid var(--accent-red);
+        }
+
+        /* --- FINAL PAGE CONTENT --- */
+        .content-section {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 20px;
+            margin-bottom: 20px;
+            border-left: 4px solid var(--accent-red);
+        }
+
+        .sub-div {
+            font-size: 0.9em;
+            color: #aaa;
+            margin-bottom: 5px;
+        }
+
+        .data-label {
+            color: var(--accent-red);
+            font-weight: bold;
+        }
+
+        .typewriter {
+            overflow: hidden;
+            white-space: nowrap;
+            border-right: .15em solid var(--accent-red);
+            animation: typing 3.5s steps(40, end), blink-caret .75s step-end infinite;
+        }
+
+        @keyframes typing { from { width: 0 } to { width: 100% } }
+        @keyframes blink-caret { from, to { border-color: transparent } 50% { border-color: var(--accent-red); } }
+
+    </style>
+</head>
+<body>
+
+    <div id="loading-screen">
+        <h2 style="letter-spacing: 10px;">SCPiNET</h2>
+        <div class="loader-bar"><div class="loader-progress"></div></div>
+        <p style="font-size: 10px; margin-top: 10px;">INITIALIZING SECURE PROTOCOLS...</p>
+    </div>
+
+    <div id="auth-overlay">
+        <div class="terminal-box">
+            <p style="color: var(--accent-red);">[!] WARNING: CLEARANCE LEVEL III REQUIRED</p>
+            <p id="auth-status">INPUTTING CREDENTIALS...</p>
+            <p id="pass-field" style="background: #111; padding: 5px;"></p>
+        </div>
+    </div>
+
+    <div id="page-home" class="page">
+        <header>
+            <h1>SCPiNET // MAIN_DATABASE</h1>
+            <span class="warning-text">RESTRICTED ACCESS - FOUNDATION PERSONNEL ONLY</span>
+        </header>
+        <div class="menu-grid">
+            <div class="menu-item">SECURITY</div>
+            <div class="menu-item">INTERNAL DEFENSES</div>
+            <div class="menu-item">COMBATIVES</div>
+            <div class="menu-item clickable" onclick="showPage('page-mtf')">MOBILE TASK FORCES</div>
+            <div class="menu-item">RAPID RESPONSE</div>
+            <div class="menu-item">AUTOMATIC TURRET SYSTEMS</div>
+            <div class="menu-item">INSTALLATION SURVEILLENCE</div>
+            <div class="menu-item">BIOHAZARD CONTAINMENT</div>
+        </div>
+    </div>
+
+    <div id="page-mtf" class="page">
+        <header>
+            <button onclick="showPage('page-home')" style="background:none; color:red; border:1px solid red; cursor:pointer;">BACK</button>
+            <h1>MTF_DIRECTORY_ALPHA_OMEGA</h1>
+        </header>
+        <div class="mtf-list" id="mtf-anchor-list">
+            </div>
+    </div>
+
+    <div id="page-data" class="page">
+        <header>
+            <h1>DOSSIER: XI-3 "BODYSNATCHERS"</h1>
+            <p class="warning-text">TOP SECRET // LEVEL III CLEARANCE ENFORCED</p>
+        </header>
+
+        <div style="margin-bottom: 30px; border-bottom: 1px solid #333; padding-bottom: 10px;">
+            <div class="sub-div"><span class="data-label">TASK FORCE:</span> XI-3</div>
+            <div class="sub-div"><span class="data-label">DESIGNATION:</span> "BODYSNATCHERS"</div>
+            <div class="sub-div"><span class="data-label">DATE OF CREATION:</span> 1974</div>
+            <div class="sub-div"><span class="data-label">CLEARANCE AUTHORITY:</span> III</div>
+            <div class="sub-div"><span class="data-label">DEPARTMENT:</span> COVERT OPERATIONS // KIDNAPPING // INVESTIGATION // TERMINATION</div>
+        </div>
+
+        <h3>LORE [SECTION]</h3>
+        <div class="content-section" contenteditable="true">
+            [Insert historical background and narrative data here...]
+        </div>
+
+        <h3>PURPOSE [SECTION]</h3>
+        <div class="content-section" contenteditable="true">
+            [Insert primary operational mandates here...]
+        </div>
+
+        <h3>REASON OF CREATION [SECTION]</h3>
+        <div class="content-section" contenteditable="true">
+            [Insert causal events of 1974 leading to formation here...]
+        </div>
+        
+        <footer style="text-align: center; color: #444; margin-top: 50px; font-size: 0.7em;">
+            &copy; SCP FOUNDATION SECURE NETWORK - INTERNAL USE ONLY
+        </footer>
+    </div>
+
+    <script>
+        // Handle initial load
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                document.getElementById('loading-screen').style.display = 'none';
+                document.getElementById('page-home').classList.add('active');
+                document.body.style.overflow = 'auto';
+            }, 3000);
+        });
+
+        // Generate MTF List
+        const mtfContainer = document.getElementById('mtf-anchor-list');
+        const greekAlphabet = ["Alpha", "Beta", "Gamma", "Delta", "Epsilon", "Zeta", "Eta", "Theta", "Iota", "Kappa", "Lambda", "Mu", "Nu", "Xi", "Omicron", "Pi", "Rho", "Sigma", "Tau", "Upsilon", "Phi", "Chi", "Psi", "Omega"];
+        
+        greekAlphabet.forEach(letter => {
+            if(letter === "Xi") {
+                // The clickable target
+                const div = document.createElement('div');
+                div.className = 'mtf-entry mtf-active clickable';
+                div.innerHTML = `XI-3 "BODYSNATCHERS" [ACCESS GRANTED]`;
+                div.onclick = startAuth;
+                mtfContainer.appendChild(div);
+            } else {
+                // Decorative list items
+                const div = document.createElement('div');
+                div.className = 'mtf-entry';
+                div.innerText = `${letter}-1 [ENCRYPTED]`;
+                mtfContainer.appendChild(div);
+            }
+        });
+
+        function showPage(pageId) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById(pageId).classList.add('active');
+            window.scrollTo(0,0);
+        }
+
+        function startAuth() {
+            const overlay = document.getElementById('auth-overlay');
+            const passField = document.getElementById('pass-field');
+            const status = document.getElementById('auth-status');
+            overlay.style.display = 'flex';
+            
+            // Fake Typing Animation
+            let pass = "********";
+            let i = 0;
+            const typing = setInterval(() => {
+                passField.innerText += pass[i];
+                i++;
+                if(i >= pass.length) {
+                    clearInterval(typing);
+                    setTimeout(() => {
+                        status.innerText = "ACCESS GRANTED. REDIRECTING...";
+                        status.style.color = "#00ff00";
+                        setTimeout(() => {
+                            overlay.style.display = 'none';
+                            showPage('page-data');
+                        }, 1500);
+                    }, 1000);
+                }
+            }, 150);
+        }
+    </script>
+</body>
+</html>
+```
