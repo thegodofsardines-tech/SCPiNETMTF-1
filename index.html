@@ -1,6 +1,3 @@
-This is a complete, single-file HTML solution. I have used internal CSS and JavaScript to handle the "page" transitions, animations, and the scrolling logic for the MTF list. 
-
-To use this, simply save the code below as an `.html` file (e.g., `scpenet.html`) and open it in any web browser.
 
 ```html
 <!DOCTYPE html>
@@ -28,7 +25,7 @@ To use this, simply save the code below as an `.html` file (e.g., `scpenet.html`
             color: var(--text-color);
             font-family: 'Courier New', Courier, monospace;
             margin: 0;
-            overflow: hidden; /* Prevent scroll during animations */
+            overflow-x: hidden;
         }
 
         /* --- LOADING OVERLAY --- */
@@ -43,7 +40,7 @@ To use this, simply save the code below as an `.html` file (e.g., `scpenet.html`
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            z-index: 1000;
+            z-index: 3000;
         }
 
         .loader-bar {
@@ -72,9 +69,8 @@ To use this, simply save the code below as an `.html` file (e.g., `scpenet.html`
         /* --- PAGES --- */
         .page {
             display: none;
-            height: 100vh;
+            min-height: 100vh;
             padding: 40px;
-            overflow-y: auto;
             border: 1px solid var(--border-gray);
             margin: 10px;
         }
@@ -106,6 +102,7 @@ To use this, simply save the code below as an `.html` file (e.g., `scpenet.html`
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 20px;
+            margin-bottom: 40px;
         }
 
         .menu-item {
@@ -114,7 +111,7 @@ To use this, simply save the code below as an `.html` file (e.g., `scpenet.html`
             background: rgba(255, 255, 255, 0.02);
             text-align: center;
             transition: 0.3s;
-            color: #666; /* Non-clickable items appear dimmed */
+            color: #666;
         }
 
         .clickable {
@@ -126,6 +123,57 @@ To use this, simply save the code below as an `.html` file (e.g., `scpenet.html`
             background: var(--accent-red);
             color: white;
             cursor: pointer;
+        }
+
+        /* --- FAKE LIVE FEEDS --- */
+        .live-monitor-container {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 20px;
+            border-top: 1px solid var(--border-gray);
+            padding-top: 20px;
+            margin-top: 50px;
+        }
+
+        .security-feed {
+            height: 200px;
+            background: #111;
+            border: 1px solid #333;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #333;
+        }
+
+        .security-feed::after {
+            content: "REC ● SITE-19 CAM-04";
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            font-size: 10px;
+            color: rgba(255,0,0,0.7);
+        }
+
+        .scanline {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            background-size: 100% 4px, 3px 100%;
+            position: absolute;
+            pointer-events: none;
+        }
+
+        .radio-comms {
+            height: 200px;
+            background: #050505;
+            border: 1px solid #222;
+            padding: 10px;
+            font-size: 11px;
+            overflow-y: hidden;
+            color: #00ff00;
+            opacity: 0.7;
         }
 
         /* --- MTF LIST --- */
@@ -148,7 +196,7 @@ To use this, simply save the code below as an `.html` file (e.g., `scpenet.html`
             margin: 10px 0;
         }
 
-        /* --- AUTH ANIMATION --- */
+        /* --- AUTH OVERLAY --- */
         #auth-overlay {
             position: fixed;
             top: 0;
@@ -177,26 +225,10 @@ To use this, simply save the code below as an `.html` file (e.g., `scpenet.html`
             border-left: 4px solid var(--accent-red);
         }
 
-        .sub-div {
-            font-size: 0.9em;
-            color: #aaa;
-            margin-bottom: 5px;
-        }
-
         .data-label {
             color: var(--accent-red);
             font-weight: bold;
         }
-
-        .typewriter {
-            overflow: hidden;
-            white-space: nowrap;
-            border-right: .15em solid var(--accent-red);
-            animation: typing 3.5s steps(40, end), blink-caret .75s step-end infinite;
-        }
-
-        @keyframes typing { from { width: 0 } to { width: 100% } }
-        @keyframes blink-caret { from, to { border-color: transparent } 50% { border-color: var(--accent-red); } }
 
     </style>
 </head>
@@ -212,7 +244,7 @@ To use this, simply save the code below as an `.html` file (e.g., `scpenet.html`
         <div class="terminal-box">
             <p style="color: var(--accent-red);">[!] WARNING: CLEARANCE LEVEL III REQUIRED</p>
             <p id="auth-status">INPUTTING CREDENTIALS...</p>
-            <p id="pass-field" style="background: #111; padding: 5px;"></p>
+            <p id="pass-field" style="background: #111; padding: 5px; height: 1.2em;"></p>
         </div>
     </div>
 
@@ -221,6 +253,7 @@ To use this, simply save the code below as an `.html` file (e.g., `scpenet.html`
             <h1>SCPiNET // MAIN_DATABASE</h1>
             <span class="warning-text">RESTRICTED ACCESS - FOUNDATION PERSONNEL ONLY</span>
         </header>
+
         <div class="menu-grid">
             <div class="menu-item">SECURITY</div>
             <div class="menu-item">INTERNAL DEFENSES</div>
@@ -230,6 +263,21 @@ To use this, simply save the code below as an `.html` file (e.g., `scpenet.html`
             <div class="menu-item">AUTOMATIC TURRET SYSTEMS</div>
             <div class="menu-item">INSTALLATION SURVEILLENCE</div>
             <div class="menu-item">BIOHAZARD CONTAINMENT</div>
+        </div>
+
+        <div class="live-monitor-container">
+            <div>
+                <p style="font-size: 10px; color: #555;">LIVE_SEC_FEED_04</p>
+                <div class="security-feed">
+                    <div class="scanline"></div>
+                    <div style="font-size: 40px; opacity: 0.1;">[LOGO]</div>
+                </div>
+            </div>
+            <div>
+                <p style="font-size: 10px; color: #555;">VISIBLE_RADIO_COMMS [ENCRYPTED]</p>
+                <div class="radio-comms" id="radio-log">
+                    </div>
+            </div>
         </div>
     </div>
 
@@ -249,63 +297,77 @@ To use this, simply save the code below as an `.html` file (e.g., `scpenet.html`
         </header>
 
         <div style="margin-bottom: 30px; border-bottom: 1px solid #333; padding-bottom: 10px;">
-            <div class="sub-div"><span class="data-label">TASK FORCE:</span> XI-3</div>
-            <div class="sub-div"><span class="data-label">DESIGNATION:</span> "BODYSNATCHERS"</div>
-            <div class="sub-div"><span class="data-label">DATE OF CREATION:</span> 1974</div>
-            <div class="sub-div"><span class="data-label">CLEARANCE AUTHORITY:</span> III</div>
-            <div class="sub-div"><span class="data-label">DEPARTMENT:</span> COVERT OPERATIONS // KIDNAPPING // INVESTIGATION // TERMINATION</div>
+            <p><span class="data-label">TASK FORCE:</span> XI-3</p>
+            <p><span class="data-label">DESIGNATION:</span> "BODYSNATCHERS"</p>
+            <p><span class="data-label">DATE OF CREATION:</span> 1974</p>
+            <p><span class="data-label">CLEARANCE AUTHORITY:</span> III</p>
+            <p><span class="data-label">DEPARTMENT:</span> COVERT OPERATIONS // KIDNAPPING // INVESTIGATION // TERMINATION</p>
         </div>
 
         <h3>LORE [SECTION]</h3>
-        <div class="content-section" contenteditable="true">
-            [Insert historical background and narrative data here...]
-        </div>
+        <div class="content-section" contenteditable="true">Click to edit Lore...</div>
 
         <h3>PURPOSE [SECTION]</h3>
-        <div class="content-section" contenteditable="true">
-            [Insert primary operational mandates here...]
-        </div>
+        <div class="content-section" contenteditable="true">Click to edit Purpose...</div>
 
         <h3>REASON OF CREATION [SECTION]</h3>
-        <div class="content-section" contenteditable="true">
-            [Insert causal events of 1974 leading to formation here...]
-        </div>
+        <div class="content-section" contenteditable="true">Click to edit Reason of Creation...</div>
         
         <footer style="text-align: center; color: #444; margin-top: 50px; font-size: 0.7em;">
-            &copy; SCP FOUNDATION SECURE NETWORK - INTERNAL USE ONLY
+            &copy; SCP FOUNDATION SECURE NETWORK
         </footer>
     </div>
 
     <script>
-        // Handle initial load
+        // Intro handling
         window.addEventListener('load', () => {
             setTimeout(() => {
                 document.getElementById('loading-screen').style.display = 'none';
                 document.getElementById('page-home').classList.add('active');
-                document.body.style.overflow = 'auto';
             }, 3000);
+            startRadioComms();
         });
 
-        // Generate MTF List
+        // Generate the MTF List
         const mtfContainer = document.getElementById('mtf-anchor-list');
-        const greekAlphabet = ["Alpha", "Beta", "Gamma", "Delta", "Epsilon", "Zeta", "Eta", "Theta", "Iota", "Kappa", "Lambda", "Mu", "Nu", "Xi", "Omicron", "Pi", "Rho", "Sigma", "Tau", "Upsilon", "Phi", "Chi", "Psi", "Omega"];
+        const greek = ["Alpha", "Beta", "Gamma", "Delta", "Epsilon", "Zeta", "Eta", "Theta", "Iota", "Kappa", "Lambda", "Mu", "Nu", "Xi", "Omicron", "Pi", "Rho", "Sigma", "Tau", "Upsilon", "Phi", "Chi", "Psi", "Omega"];
         
-        greekAlphabet.forEach(letter => {
+        greek.forEach(letter => {
+            const div = document.createElement('div');
             if(letter === "Xi") {
-                // The clickable target
-                const div = document.createElement('div');
                 div.className = 'mtf-entry mtf-active clickable';
                 div.innerHTML = `XI-3 "BODYSNATCHERS" [ACCESS GRANTED]`;
                 div.onclick = startAuth;
-                mtfContainer.appendChild(div);
             } else {
-                // Decorative list items
-                const div = document.createElement('div');
                 div.className = 'mtf-entry';
-                div.innerText = `${letter}-1 [ENCRYPTED]`;
-                mtfContainer.appendChild(div);
+                div.innerText = `${letter}-1 [ENCRYPTED DATA]`;
             }
+            mtfContainer.appendChild(div);
         });
+
+        // Fake Radio Communications
+        function startRadioComms() {
+            const log = document.getElementById('radio-log');
+            const phrases = [
+                "SITE-19: Sector 4 secure.",
+                "MTF-Nu-7: Requesting air support at Sector 09.",
+                "WARNING: Containment Breach detected in Wing C.",
+                "Epsilon-11: Entering the facility now.",
+                "RADIO: Static... [Signal Lost] ...",
+                "SYSTEM: Level 4 override detected.",
+                "DISPATCH: Confirming termination of D-9022.",
+                "BODYSNATCHERS: Moving to extraction point Alpha."
+            ];
+
+            setInterval(() => {
+                const line = document.createElement('div');
+                line.style.marginBottom = "5px";
+                const time = new Date().toLocaleTimeString();
+                line.innerText = `[${time}] ${phrases[Math.floor(Math.random()*phrases.length)]}`;
+                log.prepend(line);
+                if(log.childNodes.length > 10) log.removeChild(log.lastChild);
+            }, 2000);
+        }
 
         function showPage(pageId) {
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -319,9 +381,9 @@ To use this, simply save the code below as an `.html` file (e.g., `scpenet.html`
             const status = document.getElementById('auth-status');
             overlay.style.display = 'flex';
             
-            // Fake Typing Animation
-            let pass = "********";
+            let pass = "SECRET_XI_3";
             let i = 0;
+            passField.innerText = "";
             const typing = setInterval(() => {
                 passField.innerText += pass[i];
                 i++;
@@ -333,10 +395,10 @@ To use this, simply save the code below as an `.html` file (e.g., `scpenet.html`
                         setTimeout(() => {
                             overlay.style.display = 'none';
                             showPage('page-data');
-                        }, 1500);
-                    }, 1000);
+                        }, 1000);
+                    }, 800);
                 }
-            }, 150);
+            }, 100);
         }
     </script>
 </body>
